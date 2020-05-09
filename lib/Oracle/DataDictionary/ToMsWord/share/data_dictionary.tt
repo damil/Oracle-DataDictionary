@@ -1,0 +1,294 @@
+[%# TODO
+
+- alphabetical table index
+- Oracle details (constraints, index)
+- links to other columns
+
+- col index :
+  find out why usual msword.field() does not work (probably the additional spacerun)
+  find out how to encode \t as \e argument
+  should not have monospace font
+
+
+- check if <A name=> works for signets
+
+  
+%]
+
+
+
+
+
+[% html_head_content  = INCLUDE html_head;
+   doc_title  = "$data.name schema documentation";
+
+   # create an object "HTMLWriter"
+   USE msword = MsOffice.Word.HTML.Writer(
+     head  => html_head_content,
+     title => doc_title,
+   );
+
+
+     s_header  = msword.field('STYLEREF', '"Titre 1"') _ " / " _ msword.field('STYLEREF', '"Titre 2"');
+     h_style    = "width: 100%; border-bottom:1px solid black; tab-stops: 14.5cm";
+     header     = "<p style='$h_style'>$s_header" 
+                _ msword.tab() _ "Page " _ msword.field('PAGE') _ "</p>";
+     footer     = "<div style='font-size:7pt;text-align:right'>"
+                _ "$data.name schema documentation $data.d_extract</div>";
+
+   CALL msword.create_section(
+        header => header,
+        footer => footer,
+        page   => {size          => "21.0cm 29.7cm",        # A4
+                   margin        => "2cm 2cm 1cm 2cm",
+                   header_margin => "1cm",
+                   footer_margin => "0.5cm",},
+     );
+   first_page_body = INCLUDE first_page;
+   CALL msword.write(first_page_body);
+
+   main_content = INCLUDE tablegroups;
+   CALL msword.write(main_content);
+
+   index_content = INCLUDE column_index;
+   CALL msword.write(index_content);
+
+   CALL msword.save_as(target);
+
+   "";
+%]
+
+
+[% BLOCK html_head %]
+<xml>
+ <w:WordDocument>
+  <w:View>Print</w:View>
+ </w:WordDocument>
+</xml>
+<style>
+  body, td          { font: 10pt Arial;              }
+  p                 { margin: 0 0 0 8pt;             }
+  table             { border-collapse: collapse;     }
+  .main_title  { font: 14pt Arial Black;
+                      text-align: center             }
+  .main_subtitle       { font-style : italic;
+                      text-align: center             }
+  .toc_title         { font : 9pt Arial Black;
+                      margin: 15pt 0 0  0            }
+  .small            { font-size : 8pt;               }
+  .menu-hist        { margin-left : 10pt; }
+  .menu-modif       { margin-left : 20pt; }
+  h1                { font-size   : 14pt;
+                      font-weight : normal;
+                      font-family : Arial Black;     }
+  h2                { font-size   : 11pt;
+                      font-weight : bold;
+                      font-family : Arial;
+                      text-decoration : underline;
+                      margin-bottom : 3pt            }
+  h3                { font-size   : 9pt;
+                      font-weight : bold;
+                      font-family : Arial;
+                      margin-bottom : 3pt            }
+  .label            { font :  8pt Arial Black        }
+  .descr            { font-style : italic;
+                      font-size : 8pt;               }
+  .TM1              {mso-style-name:"TM 1";
+                     font: 9pt Arial Black;}
+  .TM2              {mso-style-name:"TM 2";
+                     margin-left: 10pt;
+                     font: bold 9pt Arial;}
+  .TM3              {mso-style-name:"TM 3";
+                     margin-left: 14pt;
+                     font: 9pt Arial;}
+
+
+  .MsoIndex1        {font-size: 8pt; font-family: Arial;
+                     margin-left:21.3pt;text-indent:-7.1pt; }
+
+  .columns          {width: 100%}
+  .columns td       {border: 1px solid darkslategray;
+                     vertical-align: top;}
+  .col_left         {width: 20%}
+  .col_right        {width: 80%}
+  .colname          {font-family: monospace}
+  .colcontent       {}
+  .coltech          {font-family: monospace; font-size: 8pt }
+  .db_info          {background: #eeeee0}  
+  .primary_key      {text-decoration: underline; font-weight: bold}
+  .col_list         {font: 8pt Arial}
+
+</style>
+[% END; # BLOCK html_head %]
+
+
+
+
+[% BLOCK first_page %]
+  <p class="main_title">
+    [% data.name %] schema documentation
+  </p>
+
+  <p class="main_subtitle">
+    [% data.d_extract %]
+  </p>
+
+  <p class="toc_title">Table of contents</p>
+
+  [% msword.field('TOC', '\\o "1-2" \\h \\u', 
+                  'Press F9 to update this table of contents');
+     # \o "1-3" : Titles from levels 1 to 3
+     # \h       : want hyperlinks
+     # \u       : use hierarchical paragraphs
+   %]
+
+  <p>&nbsp;</p>
+
+[% END; # BLOCK first_page %]
+
+[% BLOCK tablegroups;
+
+   INCLUDE tablegroup FOREACH group IN data.tablegroups;
+   END; # BLOCK tablegroups; %]
+  
+[% BLOCK tablegroup %]
+   <h1>[% group.name %]</h1>
+   <p class='descr'>[% group.descr %]</p>
+  [% INCLUDE table FOREACH table IN group.tables %]
+[% END; # BLOCK tablegroup; %]
+
+  
+[% BLOCK table; %]
+  
+  <h2>[% table.TABLE_NAME %]</h2>
+  <p class='descr'>[% table.descr %]</p>
+
+  [% FOREACH grp IN table.colgroups; %]
+  <h3>[% grp.name  %]</h3>
+
+    [% IF grp.descr %]<p class=descr>[% grp.descr  %]</p>[% END; # IF grp.descr %]
+    [% IF grp.doc_word == 'condensed';
+         INCLUDE col_list;
+       ELSE;
+         INCLUDE col_table;
+       END; %]
+
+  [% END; # FOREACH grp IN table.colgroups; %]
+
+[% END; # BLOCK table; %]
+  
+
+[% BLOCK col_list; %]
+  <p class="col_list">
+  [% FOREACH col IN grp.columns;
+       col.COLUMN_NAME;
+       '; ' UNLESS loop.last;
+     END; # FOREACH %]
+  </p>
+[% END; # BLOCK col_list; %]
+
+
+
+[% BLOCK col_table; %]
+    <table class="columns">
+      [% INCLUDE col_row FOREACH col IN grp.columns; %]
+    </table>
+[% END; # BLOCK col_table; %]
+
+
+
+[% BLOCK col_row; %]
+<tr>
+  <td class="col_left">
+    [%~ INCLUDE index_entry
+                ix_name=col.COLUMN_NAME _ ":" _ table.TABLE_NAME; ~%]
+    <a name="[% table.TABLE_NAME  _ '.' _ col.COLUMN_NAME %]"></a>[% ~%]
+    <span class="colname[% " primary_key" IF col.is_prim_key %]">
+      [%~ col.COLUMN_NAME ~%]
+    </span>
+  </td>
+  <td class="col_right">
+    <span class=coltech>
+      [% INCLUDE db_info; %]
+      [% IF col.references %]
+      &rArr; [% INCLUDE hlink_col target_col=col.references %]
+      [% END; # IF col.references %]
+
+      [% FOREACH fk IN col.is_referred_by;
+          "&lArr; " IF loop.first;
+          INCLUDE hlink_col target_col=fk ;
+         END; # FOREACH fk IN col.is_referred_by;
+      ~%]
+    </span>
+    [% IF col.descr %]
+    <span class=descr>[% col.descr || col.REMARKS %]</span>
+    [% END; # IF col.descr %]
+  </td>
+</tr>
+[% END; # BLOCK col_row; %]
+
+
+[% BLOCK hlink_col; ~%]
+     <a href="#[% target_col.TABLE_NAME %].[% target_col.COLUMN_NAME %]">
+            [%~ target_col.TABLE_NAME %].[% target_col.COLUMN_NAME ~%]
+     </a>
+[% END; # BLOCK hlink_col; ~%]
+
+
+
+[% BLOCK db_info; ~%]
+  <span class="db_info">
+     [%~ col.DATA_TYPE;
+         "($col.CHAR_LENGTH)" IF col.CHAR_LENGTH; 
+
+         IF col.DATA_PRECISION;
+           "($col.DATA_PRECISION";
+           ".$col.DATA_SCALE" IF col.DATA_SCALE;
+           ")";
+         END; # IF
+
+         " NOT NULL" IF col.NULLABLE == 'N';
+
+         " UNIQUE" IF col.is_unique;
+
+         IF col.index_type;
+            col.index_type == 'DOMAIN' ? " FULLTEXT" : " INDEXED";
+         END; # IF
+
+
+         IF col.DATA_DEFAULT;
+           col.VIRTUAL_COLUMN == "YES" ? " VIRTUAL " : " DEFAULT " ;
+           col.DATA_DEFAULT.replace(',', ', ');
+         END; # IF
+      ~%]
+  </span>
+[%~  END; # BLOCK db_info; %]
+
+
+[% BLOCK column_index; %]
+   <h1>Column index</h1>
+
+   [% msword.field('INDEX', '\\c "2" \\h "A" \\r',
+                                  'Press F9 to update this index');
+     # \c "2"  : two columns
+     # \h "A"  : add a heading for each new initial letter
+     # \r      : run-in index style %]
+
+[% END; # BLOCK column_index; %]
+
+
+[% BLOCK index_entry;
+   "<span style='mso-element:field-begin'></span>";
+   "<span style='mso-spacerun:yes'> </span>XE ";
+   "\\b " IF col.is_prim_key;
+   "&quot;$ix_name&quot;";
+   "<span style='mso-element:field-end'></span>";
+   END ; # BLOCK index_entry %]
+
+
+
+
+
+
+
+
