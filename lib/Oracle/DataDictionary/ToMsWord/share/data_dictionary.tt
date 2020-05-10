@@ -251,8 +251,8 @@
 
          " UNIQUE" IF col.is_unique;
 
-         IF col.index_type;
-            col.index_type == 'DOMAIN' ? " FULLTEXT" : " INDEXED";
+         IF col.INDEX_TYPE;
+            col.INDEX_TYPE == 'DOMAIN' ? " FULLTEXT" : " INDEXED";
          END; # IF
 
 

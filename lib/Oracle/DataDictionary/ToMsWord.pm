@@ -10,8 +10,6 @@ use Data::Reach     qw/reach/;
 use Clone           qw/clone/;
 
 
-
-
 has 'dict'        => (is => 'ro', isa => 'Oracle::DataDictionary', required   => 1);
 has 'config_data' => (is => 'ro', isa => 'HashRef', required => 1);
 
@@ -23,7 +21,6 @@ has 'name'        => (is => 'ro', isa => 'Str', lazy_build => 1);
 has 'tablegroups' => (is => 'ro', isa => 'ArrayRef', lazy_build => 1);
 has 'template'    => (is => 'ro', isa => 'Str', default => 'data_dictionary.tt');
 has 'tmpl_path'   => (is => 'ro',  isa => 'Str', lazy_build => 1);
-
 
 
 
@@ -55,8 +52,6 @@ sub _build_tablegroups {
   my ($self) = @_;
 
   my $tables = clone $self->dict->tables;
-
-  $DB::single = 1;
 
   # merge with descriptions from config
   foreach my $table_name (keys %$tables) {
