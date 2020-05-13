@@ -1,17 +1,9 @@
 [%# TODO
 
 - alphabetical table index
-- Oracle details (constraints, index)
-- links to other columns
 
 - col index :
   find out why usual msword.field() does not work (probably the additional spacerun)
-  find out how to encode \t as \e argument
-  should not have monospace font
-
-
-- check if <A name=> works for signets
-
   
 %]
 

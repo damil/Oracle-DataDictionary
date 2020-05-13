@@ -1,4 +1,5 @@
 package Oracle::DataDictionary;
+use utf8;
 use Moose;
 use Moose::TypeConstraints qw/duck_type/;
 use YAML;
@@ -317,7 +318,6 @@ download comments associated to tables and columns
 =back
 
 =back
-
 
 
 
