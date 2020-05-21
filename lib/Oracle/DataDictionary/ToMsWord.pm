@@ -294,7 +294,7 @@ therefore it is possible to use the same config information both
 for generating documentation and for running an app that displays
 or modifies data from the Oracle database.
 
-The expected datas tructure is as described in 
+The expected datastructure is as described in 
 L<App::AutoCRUD::ConfigDomain/datasources>.
 
 

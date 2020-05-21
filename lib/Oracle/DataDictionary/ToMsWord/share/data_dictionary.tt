@@ -83,7 +83,8 @@
                       font-family : Arial;
                       margin-bottom : 3pt            }
   .label            { font :  8pt Arial Black        }
-  .descr            { font-style : italic;
+  .descr            { font-family: Verdana;
+                      font-style : italic;
                       font-size : 8pt;               }
   .TM1              {mso-style-name:"TM 1";
                      font: 9pt Arial Black;}
@@ -101,12 +102,11 @@
   .columns          {width: 100%}
   .columns td       {border: 1px solid darkslategray;
                      vertical-align: top;}
-  .col_left         {width: 20%}
-  .col_right        {width: 80%}
-  .colname          {font-family: monospace}
-  .colcontent       {}
-  .coltech          {font-family: monospace; font-size: 8pt }
-  .db_info          {background: #eeeee0}  
+  .col_left         {width: 20%; margin-left: 3px}
+  .col_right        {width: 80%; margin-left: 3px}
+  .colname          {font-family: Calibri}
+  .technical_info   {font-size: 8pt }
+  .db_info          {background: #eeeee0; font-family: Calibri}  
   .primary_key      {text-decoration: underline; font-weight: bold}
   .col_list         {font: 8pt Arial}
 
@@ -200,15 +200,17 @@
     </span>
   </td>
   <td class="col_right">
-    <span class=coltech>
+    <span class="technical_info">
       [% INCLUDE db_info; %]
       [% IF col.references %]
-      &rArr; [% INCLUDE hlink_col target_col=col.references %]
+      &rArr; [% INCLUDE hlink_col target_col=col.references
+                                  show_col=col.COLUMN_NAME != col.references.COLUMN_NAME %]
       [% END; # IF col.references %]
 
       [% FOREACH fk IN col.is_referred_by;
           "&lArr; " IF loop.first;
-          INCLUDE hlink_col target_col=fk ;
+          INCLUDE hlink_col target_col=fk show_col=col.COLUMN_NAME != fk.COLUMN_NAME;
+          ", " UNLESS loop.last;
          END; # FOREACH fk IN col.is_referred_by;
       ~%]
     </span>
@@ -222,10 +224,10 @@
 
 [% BLOCK hlink_col; ~%]
      <a href="#[% target_col.TABLE_NAME %].[% target_col.COLUMN_NAME %]">
-            [%~ target_col.TABLE_NAME %].[% target_col.COLUMN_NAME ~%]
+        [%~ target_col.TABLE_NAME;
+            "." _ target_col.COLUMN_NAME IF show_col; ~%]
      </a>
 [% END; # BLOCK hlink_col; ~%]
-
 
 
 [% BLOCK db_info; ~%]

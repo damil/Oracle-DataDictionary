@@ -1,7 +1,7 @@
 package Oracle::DataDictionary;
 use utf8;
 use Moose;
-use Moose::TypeConstraints qw/duck_type/;
+use Moose::Util::TypeConstraints qw/duck_type/;
 use YAML;
 use Clone           qw/clone/;
 
